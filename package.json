@@ -22,12 +22,14 @@
     "mvs-manager"
   ],
   "activationEvents": [
+    "onStartupFinished",
     "workspaceContains:**/mvs.json",
     "onCommand:mvs.lint",
     "onCommand:mvs.generate",
     "onCommand:mvs.report",
     "onCommand:mvs.doctor",
-    "onCommand:mvs.clearDiagnostics"
+    "onCommand:mvs.clearDiagnostics",
+    "onCommand:mvs.checkForUpdates"
   ],
   "main": "./dist/extension.js",
   "scripts": {
@@ -87,6 +89,31 @@
           "type": "boolean",
           "default": false,
           "description": "Run MVS lint when the manifest file (under root) is saved (debounced)."
+        },
+        "mvsManager.autoUpdate.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Periodically check GitHub for a newer release of this extension (VSIX from the configured repository)."
+        },
+        "mvsManager.autoUpdate.mode": {
+          "type": "string",
+          "default": "install",
+          "enum": ["install", "notify"],
+          "enumDescriptions": [
+            "When a newer version exists, download the release .vsix and install it, then prompt to reload.",
+            "Show a notification first; install only if you choose \"Download and install\"."
+          ]
+        },
+        "mvsManager.autoUpdate.intervalHours": {
+          "type": "number",
+          "default": 24,
+          "minimum": 1,
+          "description": "How often to re-check GitHub for updates (first check runs shortly after startup)."
+        },
+        "mvsManager.autoUpdate.releaseApiUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Optional override for the GitHub releases API base URL (no trailing slash), e.g. https://api.github.com/repos/owner/repo. Leave empty to derive owner/repo from package.json repository.url."
         }
       }
     },
@@ -114,6 +141,11 @@
       {
         "command": "mvs.clearDiagnostics",
         "title": "MVS: Clear diagnostics",
+        "category": "MVS"
+      },
+      {
+        "command": "mvs.checkForUpdates",
+        "title": "MVS: Check for extension updates",
         "category": "MVS"
       }
     ]

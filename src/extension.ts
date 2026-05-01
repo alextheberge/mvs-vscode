@@ -2,6 +2,7 @@
 // @mvs-protocol:mvs_cli_json_reports_v1
 import * as path from "path";
 import * as vscode from "vscode";
+import { checkAndApplyExtensionUpdate, scheduleExtensionAutoUpdate } from "./extensionUpdate";
 import { diagnosticsFromLintReport } from "./lintDiagnostics";
 import { parseLintReportJson } from "./lintModel";
 import { resolveExecutable, runMvsManager } from "./mvsRunner";
@@ -234,6 +235,18 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("mvs.doctor", () => withFolder((wf) => runDoctor(wf))),
     vscode.commands.registerCommand("mvs.clearDiagnostics", () => {
       COLLECTION.clear();
+    }),
+    vscode.commands.registerCommand("mvs.checkForUpdates", async () => {
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: "MVS: Checking for updates…",
+          cancellable: false,
+        },
+        async () => {
+          await checkAndApplyExtensionUpdate(context, log, { force: true });
+        }
+      );
     })
   );
 
@@ -268,6 +281,8 @@ export function activate(context: vscode.ExtensionContext) {
   if (wf0) {
     void logWorkspaceMvsIdentityIfPresent(wf0);
   }
+
+  scheduleExtensionAutoUpdate(context, log);
 }
 
 export function deactivate() {

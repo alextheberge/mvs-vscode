@@ -43,6 +43,12 @@ VSCodium uses [Open VSX](https://open-vsx.org/) by default. After the extension 
 | `context` | Passed to `generate --context`. |
 | `aiSchema` | Optional; if set, passed as `--ai-schema` (path relative to the workspace folder). |
 | `runLintOnSave` | When `true`, debounced lint after saving the resolved manifest file (`root` + `manifest`). |
+| `autoUpdate.enabled` | When `true` (default), checks GitHub for a newer release VSIX on a timer after startup. |
+| `autoUpdate.mode` | `install` (default): download and install automatically. `notify`: prompt before downloading. |
+| `autoUpdate.intervalHours` | Minimum hours between background checks (default `24`). |
+| `autoUpdate.releaseApiUrl` | Optional `https://api.github.com/repos/owner/repo` override (e.g. fork or GitHub Enterprise API base). |
+
+**Note:** Extensions installed from the Marketplace already update through the editor. Auto-update here targets **GitHub release VSIX** installs (same repo as `package.json` `repository.url`) so sideloaded builds can stay current.
 
 ## Commands
 
@@ -51,6 +57,7 @@ VSCodium uses [Open VSX](https://open-vsx.org/) by default. After the extension 
 - **MVS: Report (JSON)** — runs `report` with base and target set to the configured manifest (useful for inspecting JSON shape; compare two manifests via the CLI for real diffs).
 - **MVS: Doctor** — `doctor --format json`; opens the MVS output channel.
 - **MVS: Clear diagnostics** — clears the MVS diagnostic collection.
+- **MVS: Check for extension updates** — queries GitHub releases immediately (same logic as background auto-update).
 
 ## Publishing (maintainers)
 
