@@ -12,7 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install mvs-manager (MVSengine releases)
-        run: curl -fsSL https://raw.githubusercontent.com/alextheberge/MVSengine/main/scripts/install.sh | bash
+        run: |
+          set -euo pipefail
+          bin_dir="${{ github.workspace }}/.local/bin"
+          install_url="https://raw.githubusercontent.com/alextheberge/MVSengine/master/scripts/install.sh"
+          curl -fsSL "$install_url" -o /tmp/mvs-install-mvsengine.sh
+          bash /tmp/mvs-install-mvsengine.sh
+          "${bin_dir}/mvs-manager" --version
         env:
           MVS_INSTALL_DIR: ${{ github.workspace }}/.local/bin
           MVS_VERSION: latest
