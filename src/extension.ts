@@ -1,3 +1,5 @@
+// @mvs-feature:vscode_extension_surface
+// @mvs-protocol:mvs_cli_json_reports_v1
 import * as path from "path";
 import * as vscode from "vscode";
 import { diagnosticsFromLintReport } from "./lintDiagnostics";
@@ -40,6 +42,22 @@ function manifestAbsPath(wf: vscode.WorkspaceFolder, rootRel: string, manifestRe
 
 function log(msg: string) {
   output.appendLine(msg);
+}
+
+async function logWorkspaceMvsIdentityIfPresent(wf: vscode.WorkspaceFolder): Promise<void> {
+  const c = readConfig(wf);
+  const manifestAbs = manifestAbsPath(wf, c.root, c.manifest);
+  try {
+    const bytes = await vscode.workspace.fs.readFile(vscode.Uri.file(manifestAbs));
+    const raw = Buffer.from(bytes).toString("utf8");
+    const parsed = JSON.parse(raw) as { identity?: { mvs?: string } };
+    const id = parsed.identity?.mvs;
+    if (id) {
+      log(`Workspace manifest MVS identity: ${id}`);
+    }
+  } catch {
+    /* no manifest or unreadable */
+  }
 }
 
 async function runLint(
@@ -243,7 +261,13 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  log("MVS extension activated.");
+  const extVer =
+    (context.extension.packageJSON as { version?: string } | undefined)?.version ?? "?";
+  log(`MVS extension activated (package ${extVer}).`);
+  const wf0 = vscode.workspace.workspaceFolders?.[0];
+  if (wf0) {
+    void logWorkspaceMvsIdentityIfPresent(wf0);
+  }
 }
 
 export function deactivate() {

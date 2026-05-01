@@ -2,7 +2,7 @@
   "name": "mvs-vscode",
   "displayName": "MVS Manager",
   "description": "Multidimensional versioning for projects using mvs-manager (lint, generate, report, doctor).",
-  "version": "0.1.0",
+  "version": "0.3.2",
   "publisher": "alextheberge",
   "license": "AGPL-3.0-only",
   "repository": {
@@ -12,8 +12,15 @@
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": ["Linters", "Other"],
-  "keywords": ["mvs", "versioning", "mvs-manager"],
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "mvs",
+    "versioning",
+    "mvs-manager"
+  ],
   "activationEvents": [
     "workspaceContains:**/mvs.json",
     "onCommand:mvs.lint",
@@ -30,7 +37,11 @@
     "check": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\"",
     "test": "vitest run",
-    "package": "vsce package --no-dependencies"
+    "package": "vsce package --no-dependencies",
+    "mvs:lint": "mvs-manager lint --root . --manifest mvs.json --format text",
+    "mvs:generate": "mvs-manager generate --root . --manifest mvs.json --context vscode --format text",
+    "mvs:sync-version": "node scripts/sync-version.mjs",
+    "mvs:dogfood-check": "node scripts/check-dogfood.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

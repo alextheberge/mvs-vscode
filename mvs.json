@@ -1,0 +1,100 @@
+{
+  "$schema": "https://mvs.dev/schema/v1",
+  "identity": {
+    "mvs": "0.3.2-vscode",
+    "arch": 0,
+    "feat": 3,
+    "prot": 2,
+    "cont": "vscode"
+  },
+  "compatibility": {
+    "host_range": {
+      "min_prot": 0,
+      "max_prot": 2
+    },
+    "extension_range": {
+      "min_prot": 0,
+      "max_prot": 2
+    },
+    "legacy_shims": []
+  },
+  "capabilities": {
+    "manifest_generation": true,
+    "manifest_linting": true
+  },
+  "ai_contract": {
+    "tool_schema_version": 1,
+    "tool_schema_hash": "",
+    "required_model_capabilities": [],
+    "provided_model_capabilities": [],
+    "prompt_contract_id": "mvs-vscode-extension-v1"
+  },
+  "environment": {
+    "profiles": [
+      "vscode"
+    ],
+    "runtime_constraints": {
+      "node": "20+"
+    }
+  },
+  "scan_policy": {
+    "exclude_paths": [
+      "dist",
+      "test",
+      "node_modules",
+      ".github"
+    ],
+    "public_api_roots": [
+      "src/extension.ts"
+    ],
+    "ts_export_following": "relative_only"
+  },
+  "evidence": {
+    "feature_hash": "85a5b7baa53ca6f86da7cf1edad01732d8a471cf4a9badcaa31da776ac6560c0",
+    "protocol_hash": "99a34774149b4bb65903f9649ea8e11b0a04235df34204265b33137cf4618d0c",
+    "public_api_hash": "72e4dad28a8cbde700e0c31db7f911c652ebf4047394a98da7c70e5c61878ef5",
+    "feature_inventory": [
+      "vscode_extension_surface"
+    ],
+    "protocol_inventory": [
+      "mvs_cli_json_reports_v1"
+    ],
+    "public_api_inventory": [
+      {
+        "file": "src/extension.ts",
+        "signature": "ts/js:function activate(context: vscode.ExtensionContext)"
+      },
+      {
+        "file": "src/extension.ts",
+        "signature": "ts/js:function deactivate()"
+      }
+    ]
+  },
+  "history": [
+    {
+      "mvs": "0.2.1-vscode",
+      "arch": 0,
+      "feat": 2,
+      "prot": 1,
+      "cont": "vscode",
+      "reasons": [
+        "Feature incremented due to @mvs-feature set drift (example source: unknown source).",
+        "Protocol incremented due to @mvs-protocol surface drift (example source: unknown source).",
+        "Protocol incremented due to public API signature drift (example source: src/extension.ts)."
+      ],
+      "changed_at_unix": 1777600911
+    },
+    {
+      "mvs": "0.3.2-vscode",
+      "arch": 0,
+      "feat": 3,
+      "prot": 2,
+      "cont": "vscode",
+      "reasons": [
+        "Feature incremented due to @mvs-feature set drift (example source: src/extension.ts).",
+        "Protocol incremented due to @mvs-protocol surface drift (example source: src/extension.ts)."
+      ],
+      "changed_at_unix": 1777600957
+    }
+  ]
+}

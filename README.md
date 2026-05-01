@@ -54,10 +54,13 @@ VSCodium uses [Open VSX](https://open-vsx.org/) by default. After the extension 
 
 ## Publishing (maintainers)
 
+This repository [dogfoods](https://github.com/alextheberge/MVSengine) MVS: `mvs.json` pins the extension’s public API (`activate` / `deactivate`), feature tags, and protocol tags. After you change tracked surfaces, run `mvs-manager generate` (or **MVS: Generate** in this workspace), then `npm run mvs:sync-version` so `package.json` matches `mvs.json` identity (`arch.feat.prot`). `npm run mvs:dogfood-check` verifies the two stay aligned.
+
+- **GitHub Release:** push an annotated tag `v` + exact `package.json` version (for example `v0.3.2`). The **Release** workflow builds, runs the same gates as CI, attaches `mvs-vscode-*.vsix`, and opens a release with generated notes.
 - **VS Marketplace:** `npx @vscode/vsce publish` with a [Personal Access Token](https://code.visualstudio.com/api/working-with-extensions/publishing-extension).
 - **Open VSX:** `npx ovsx publish` with an [Open VSX token](https://github.com/eclipse/openvsx/wiki/Publishing-Extensions).
 
-CI in this repo runs `check`, `lint`, `test`, `compile`, and packages a VSIX with `vsce package`.
+CI installs the latest `mvs-manager` from MVSengine releases, runs `mvs:dogfood-check`, `mvs:lint`, then `check`, ESLint, tests, compile, and `vsce package`.
 
 ## License
 
