@@ -9,6 +9,15 @@ Thin editor wrapper around the [`mvs-manager`](https://github.com/alextheberge/M
 
 Minimum tested CLI version: align with the [MVSengine](https://github.com/alextheberge/MVSengine) release you install; the integration contract is `lint --format json` (`LintReport` JSON).
 
+## Download from GitHub
+
+| What you want | Link |
+|----------------|------|
+| **Latest stable** universal VSIX (recommended) | [**github.com/alextheberge/mvs-vscode/releases/latest**](https://github.com/alextheberge/mvs-vscode/releases/latest) — open **Assets**, download `mvs-vscode-*-universal.vsix`, then **Extensions: Install from VSIX…** |
+| **Bleeding edge** from `main` (prerelease, updated on each push to `main`) | [**…/releases/tag/edge**](https://github.com/alextheberge/mvs-vscode/releases/tag/edge) — same install flow; may be ahead of the latest stable tag |
+
+Stable releases use semver tags (`v0.3.2`, …). The **edge** prerelease does not replace **Latest** on GitHub’s API, so the extension’s auto-update (which uses `releases/latest`) still tracks **stable** builds.
+
 ## Install
 
 ### From a VSIX
@@ -63,7 +72,8 @@ VSCodium uses [Open VSX](https://open-vsx.org/) by default. After the extension 
 
 This repository [dogfoods](https://github.com/alextheberge/MVSengine) MVS: `mvs.json` pins the extension’s public API (`activate` / `deactivate`), feature tags, and protocol tags. After you change tracked surfaces, run `mvs-manager generate` (or **MVS: Generate** in this workspace), then `npm run mvs:sync-version` so `package.json` matches `mvs.json` identity (`arch.feat.prot`). `npm run mvs:dogfood-check` verifies the two stay aligned.
 
-- **GitHub Release:** push a tag `v` + exact `package.json` version (for example `v0.3.2`). The **Release** workflow builds, runs the same gates as CI, attaches **`mvs-vscode-<version>-universal.vsix`** (platform-independent), and opens a release with generated notes plus a short “universal VSIX” blurb. **Actions → Release → Run workflow** on a branch builds and uploads **`vsix-release-dryrun-universal`** without publishing a GitHub Release.
+- **Stable GitHub Release:** push an annotated tag `v` + exact `package.json` version (for example `v0.3.2`). The **Release** workflow builds, attaches **`mvs-vscode-<version>-universal.vsix`**, and publishes the release (shown under **Releases** and at `/releases/latest`). **Actions → Release → Run workflow** on a branch only uploads **`vsix-release-dryrun-universal`** (no GitHub Release).
+- **Edge prerelease:** every push to **`main`** runs **Edge VSIX (main)** and republishes the **`edge`** prerelease so a VSIX is always on GitHub without tagging (see [Download from GitHub](#download-from-github)).
 - **VS Marketplace:** `npx @vscode/vsce publish` with a [Personal Access Token](https://code.visualstudio.com/api/working-with-extensions/publishing-extension).
 - **Open VSX:** `npx ovsx publish` with an [Open VSX token](https://github.com/eclipse/openvsx/wiki/Publishing-Extensions).
 

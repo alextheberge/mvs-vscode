@@ -1,0 +1,78 @@
+# Publishes a rolling prerelease "edge" so users can always download a VSIX from GitHub
+# without waiting for a semver tag. /releases/latest still points at stable (non-prerelease).
+
+name: Edge VSIX (main)
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: edge-release-${{ github.repository }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  publish-edge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install mvs-manager (MVSengine releases)
+        run: |
+          set -euo pipefail
+          bin_dir="${{ github.workspace }}/.local/bin"
+          mkdir -p "$bin_dir"
+          api="https://api.github.com/repos/alextheberge/MVSengine/releases/latest"
+          tag=$(curl -fsSL -H "Accept: application/vnd.github+json" -H "User-Agent: mvs-vscode-ci" "$api" | python3 -c "import json,sys; print(json.load(sys.stdin)['tag_name'])")
+          ver="${tag#v}"
+          asset="mvs-manager-${ver}-x86_64-unknown-linux-gnu.tar.gz"
+          url="https://github.com/alextheberge/MVSengine/releases/download/${tag}/${asset}"
+          tmp=$(mktemp -d)
+          trap 'rm -rf "$tmp"' EXIT
+          curl -fsSL "$url" -o "$tmp/${asset}"
+          tar -xzf "$tmp/${asset}" -C "$tmp"
+          cp "$tmp/mvs-manager" "$bin_dir/mvs-manager"
+          chmod +x "$bin_dir/mvs-manager"
+          "$bin_dir/mvs-manager" --version
+      - run: echo "${{ github.workspace }}/.local/bin" >> "$GITHUB_PATH"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npm run mvs:dogfood-check
+      - run: npm run check
+      - run: npm run lint
+      - run: npm test
+      - run: npm run compile
+      - run: npm run mvs:lint
+      - run: npm run package
+      - name: Publish prerelease "edge" (universal VSIX)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          vsix=$(ls -1 mvs-vscode-*-universal.vsix | head -1)
+          test -f "$vsix"
+          SHORT_SHA="${GITHUB_SHA:0:7}"
+          REPO="${{ github.repository }}"
+          gh release delete edge --yes --cleanup-tag --repo "$REPO" 2>/dev/null || true
+          NOTES_FILE=$(mktemp)
+          {
+            echo "Automated **prerelease** from \`main\` (commit \`${SHORT_SHA}\`). One **universal** VSIX for Windows, macOS, and Linux."
+            echo
+            echo "**Stable (recommended):** [Latest release](https://github.com/${REPO}/releases/latest)"
+            echo
+            echo "Install **mvs-manager** separately: [MVSengine](https://github.com/alextheberge/MVSengine)."
+          } > "$NOTES_FILE"
+          gh release create edge "$vsix" \
+            --repo "$REPO" \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "MVS Manager edge (main @ ${SHORT_SHA})" \
+            --notes-file "$NOTES_FILE"
+          rm -f "$NOTES_FILE"
+          echo "Published prerelease: https://github.com/${REPO}/releases/tag/edge"
