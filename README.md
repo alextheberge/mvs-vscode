@@ -19,7 +19,7 @@ npm run compile
 npm run package
 ```
 
-Then in the editor: **Extensions: Install from VSIX…** and pick the generated `.vsix`.
+Then in the editor: **Extensions: Install from VSIX…** and pick **`mvs-vscode-<version>-universal.vsix`** (one **universal** package for Windows, macOS, and Linux; it does not include the native `mvs-manager` CLI).
 
 ### Visual Studio Code (Marketplace)
 
@@ -63,7 +63,7 @@ VSCodium uses [Open VSX](https://open-vsx.org/) by default. After the extension 
 
 This repository [dogfoods](https://github.com/alextheberge/MVSengine) MVS: `mvs.json` pins the extension’s public API (`activate` / `deactivate`), feature tags, and protocol tags. After you change tracked surfaces, run `mvs-manager generate` (or **MVS: Generate** in this workspace), then `npm run mvs:sync-version` so `package.json` matches `mvs.json` identity (`arch.feat.prot`). `npm run mvs:dogfood-check` verifies the two stay aligned.
 
-- **GitHub Release:** push a tag `v` + exact `package.json` version (for example `v0.3.2`). The **Release** workflow builds, runs the same gates as CI, attaches `mvs-vscode-*.vsix`, and opens a release with generated notes. You can also run **Actions → Release → Run workflow** on a branch: it performs the full build and uploads a **vsix-release-dryrun** artifact without creating a GitHub Release (releases still only happen on tag pushes).
+- **GitHub Release:** push a tag `v` + exact `package.json` version (for example `v0.3.2`). The **Release** workflow builds, runs the same gates as CI, attaches **`mvs-vscode-<version>-universal.vsix`** (platform-independent), and opens a release with generated notes plus a short “universal VSIX” blurb. **Actions → Release → Run workflow** on a branch builds and uploads **`vsix-release-dryrun-universal`** without publishing a GitHub Release.
 - **VS Marketplace:** `npx @vscode/vsce publish` with a [Personal Access Token](https://code.visualstudio.com/api/working-with-extensions/publishing-extension).
 - **Open VSX:** `npx ovsx publish` with an [Open VSX token](https://github.com/eclipse/openvsx/wiki/Publishing-Extensions).
 

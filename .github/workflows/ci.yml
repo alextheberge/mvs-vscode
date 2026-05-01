@@ -43,5 +43,5 @@ jobs:
       - run: npm run package
       - uses: actions/upload-artifact@v6
         with:
-          name: vsix
-          path: "*.vsix"
+          name: vsix-universal
+          path: "*-universal.vsix"

@@ -38,9 +38,25 @@ function readAutoUpdateConfig() {
   };
 }
 
-function pickVsixAsset(assets: GitHubReleaseAsset[]): GitHubReleaseAsset | undefined {
+function pickVsixAsset(assets: GitHubReleaseAsset[], packageName: string): GitHubReleaseAsset | undefined {
   const vsix = assets.filter((a) => a.name.toLowerCase().endsWith(".vsix"));
+  if (vsix.length === 0) {
+    return undefined;
+  }
+  const universal = vsix.find((a) => /universal/i.test(a.name));
+  if (universal) {
+    return universal;
+  }
+  const prefix = new RegExp(`^${escapeRegExp(packageName)}-`, "i");
+  const primary = vsix.find((a) => prefix.test(a.name));
+  if (primary) {
+    return primary;
+  }
   return vsix[0];
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 async function fetchLatestReleaseJson(
@@ -159,6 +175,7 @@ export async function checkAndApplyExtensionUpdate(
     }
 
     const pkg = context.extension.packageJSON as {
+      name?: string;
       version?: string;
       repository?: { url?: string };
     };
@@ -220,7 +237,7 @@ export async function checkAndApplyExtensionUpdate(
       return;
     }
 
-    const asset = pickVsixAsset(release.assets ?? []);
+    const asset = pickVsixAsset(release.assets ?? [], pkg.name ?? "mvs-vscode");
     if (!asset?.browser_download_url) {
       const msg = "Auto-update: latest release has no .vsix asset.";
       log(msg);
@@ -239,7 +256,7 @@ export async function checkAndApplyExtensionUpdate(
       return;
     }
 
-    log(`Auto-update: newer release ${latestVer} available (running ${current}).`);
+    log(`Auto-update: newer release ${latestVer} available (running ${current}). Using asset: ${asset.name}`);
 
     if (mode === "notify") {
       const releasePage = `https://github.com/${parsed.owner}/${parsed.repo}/releases/tag/${encodeURIComponent(
@@ -271,7 +288,8 @@ export async function checkAndApplyExtensionUpdate(
       return;
     }
 
-    const dest = path.join(storageRoot, "download", `mvs-manager-${latestVer}.vsix`);
+    const extSlug = pkg.name ?? "mvs-vscode";
+    const dest = path.join(storageRoot, "download", `${extSlug}-${latestVer}-universal.vsix`);
 
     try {
       await vscode.window.withProgress(

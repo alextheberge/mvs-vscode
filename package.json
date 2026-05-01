@@ -39,7 +39,7 @@
     "check": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\"",
     "test": "vitest run",
-    "package": "vsce package --no-dependencies",
+    "package": "node scripts/package-universal.mjs",
     "mvs:lint": "mvs-manager lint --root . --manifest mvs.json --format text",
     "mvs:generate": "mvs-manager generate --root . --manifest mvs.json --context vscode --format text",
     "mvs:sync-version": "node scripts/sync-version.mjs",

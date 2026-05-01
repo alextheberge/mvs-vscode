@@ -60,11 +60,18 @@ jobs:
         if: github.ref_type != 'tag'
         uses: actions/upload-artifact@v6
         with:
-          name: vsix-release-dryrun
-          path: "*.vsix"
+          name: vsix-release-dryrun-universal
+          path: "*-universal.vsix"
       - name: Publish GitHub Release
         if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v3
         with:
-          files: "*.vsix"
+          files: "*-universal.vsix"
+          fail_on_unmatched_files: true
           generate_release_notes: true
+          body: |
+            ### Extension package (universal)
+
+            The attached **`mvs-vscode-*-universal.vsix`** is a **single, platform-independent** bundle (JavaScript for the VS Code extension host only). Install the **same file** on **Windows, macOS, and Linux** (VS Code, Cursor, or other compatible editors).
+
+            **`mvs-manager`** (the MVS CLI) is **not** included in the VSIX. Install [MVSengine](https://github.com/alextheberge/MVSengine) for your OS separately.
