@@ -1,0 +1,110 @@
+{
+  "name": "mvs-vscode",
+  "displayName": "MVS Manager",
+  "description": "Multidimensional versioning for projects using mvs-manager (lint, generate, report, doctor).",
+  "version": "0.1.0",
+  "publisher": "alextheberge",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alextheberge/mvs-vscode"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Linters", "Other"],
+  "keywords": ["mvs", "versioning", "mvs-manager"],
+  "activationEvents": [
+    "workspaceContains:**/mvs.json",
+    "onCommand:mvs.lint",
+    "onCommand:mvs.generate",
+    "onCommand:mvs.report",
+    "onCommand:mvs.doctor",
+    "onCommand:mvs.clearDiagnostics"
+  ],
+  "main": "./dist/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap",
+    "watch": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap --watch",
+    "check": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\"",
+    "test": "vitest run",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vscode/vsce": "^3.2.0",
+    "eslint": "^8.57.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "contributes": {
+    "configuration": {
+      "title": "MVS Manager",
+      "properties": {
+        "mvsManager.executablePath": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path to the mvs-manager binary. Leave empty to use `mvs-manager` on PATH."
+        },
+        "mvsManager.root": {
+          "type": "string",
+          "default": ".",
+          "description": "Project root passed to --root (relative to the workspace folder)."
+        },
+        "mvsManager.manifest": {
+          "type": "string",
+          "default": "mvs.json",
+          "description": "Manifest path relative to `mvsManager.root` (same as `mvs-manager` doctor/lint/generate)."
+        },
+        "mvsManager.context": {
+          "type": "string",
+          "default": "cli",
+          "description": "Value for `mvs-manager generate --context`."
+        },
+        "mvsManager.aiSchema": {
+          "type": "string",
+          "default": "",
+          "description": "Optional path for `mvs-manager --ai-schema` (relative to the workspace folder)."
+        },
+        "mvsManager.runLintOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run MVS lint when the manifest file (under root) is saved (debounced)."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "mvs.lint",
+        "title": "MVS: Lint manifest",
+        "category": "MVS"
+      },
+      {
+        "command": "mvs.generate",
+        "title": "MVS: Generate / update manifest",
+        "category": "MVS"
+      },
+      {
+        "command": "mvs.report",
+        "title": "MVS: Report (JSON)",
+        "category": "MVS"
+      },
+      {
+        "command": "mvs.doctor",
+        "title": "MVS: Doctor",
+        "category": "MVS"
+      },
+      {
+        "command": "mvs.clearDiagnostics",
+        "title": "MVS: Clear diagnostics",
+        "category": "MVS"
+      }
+    ]
+  }
+}
