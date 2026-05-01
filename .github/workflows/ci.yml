@@ -15,13 +15,19 @@ jobs:
         run: |
           set -euo pipefail
           bin_dir="${{ github.workspace }}/.local/bin"
-          install_url="https://raw.githubusercontent.com/alextheberge/MVSengine/master/scripts/install.sh"
-          curl -fsSL "$install_url" -o /tmp/mvs-install-mvsengine.sh
-          bash /tmp/mvs-install-mvsengine.sh
-          "${bin_dir}/mvs-manager" --version
-        env:
-          MVS_INSTALL_DIR: ${{ github.workspace }}/.local/bin
-          MVS_VERSION: latest
+          mkdir -p "$bin_dir"
+          api="https://api.github.com/repos/alextheberge/MVSengine/releases/latest"
+          tag=$(curl -fsSL -H "Accept: application/vnd.github+json" -H "User-Agent: mvs-vscode-ci" "$api" | python3 -c "import json,sys; print(json.load(sys.stdin)['tag_name'])")
+          ver="${tag#v}"
+          asset="mvs-manager-${ver}-x86_64-unknown-linux-gnu.tar.gz"
+          url="https://github.com/alextheberge/MVSengine/releases/download/${tag}/${asset}"
+          tmp=$(mktemp -d)
+          trap 'rm -rf "$tmp"' EXIT
+          curl -fsSL "$url" -o "$tmp/${asset}"
+          tar -xzf "$tmp/${asset}" -C "$tmp"
+          cp "$tmp/mvs-manager" "$bin_dir/mvs-manager"
+          chmod +x "$bin_dir/mvs-manager"
+          "$bin_dir/mvs-manager" --version
       - run: echo "${{ github.workspace }}/.local/bin" >> "$GITHUB_PATH"
       - uses: actions/setup-node@v4
         with:
