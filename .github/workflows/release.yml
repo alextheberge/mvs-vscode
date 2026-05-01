@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,7 +13,7 @@ jobs:
   vsix:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install mvs-manager (MVSengine releases)
         run: |
           set -euo pipefail
@@ -31,9 +32,9 @@ jobs:
           chmod +x "$bin_dir/mvs-manager"
           "$bin_dir/mvs-manager" --version
       - run: echo "${{ github.workspace }}/.local/bin" >> "$GITHUB_PATH"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
       - run: npm ci
       - run: npm run mvs:dogfood-check
@@ -44,6 +45,7 @@ jobs:
       - run: npm run mvs:lint
       - run: npm run package
       - name: Verify tag matches package.json version
+        if: github.ref_type == 'tag'
         env:
           TAG_NAME: ${{ github.ref_name }}
         run: |
@@ -54,7 +56,15 @@ jobs:
             echo "Sync versions (npm run mvs:sync-version after regenerating mvs.json), commit, then tag v\${PKG_VER}."
             exit 1
           fi
-      - uses: softprops/action-gh-release@v2
+      - name: Upload VSIX artifact (workflow_dispatch dry run)
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v6
+        with:
+          name: vsix-release-dryrun
+          path: "*.vsix"
+      - name: Publish GitHub Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v3
         with:
           files: "*.vsix"
           generate_release_notes: true

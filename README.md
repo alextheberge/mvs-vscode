@@ -63,11 +63,11 @@ VSCodium uses [Open VSX](https://open-vsx.org/) by default. After the extension 
 
 This repository [dogfoods](https://github.com/alextheberge/MVSengine) MVS: `mvs.json` pins the extension’s public API (`activate` / `deactivate`), feature tags, and protocol tags. After you change tracked surfaces, run `mvs-manager generate` (or **MVS: Generate** in this workspace), then `npm run mvs:sync-version` so `package.json` matches `mvs.json` identity (`arch.feat.prot`). `npm run mvs:dogfood-check` verifies the two stay aligned.
 
-- **GitHub Release:** push an annotated tag `v` + exact `package.json` version (for example `v0.3.2`). The **Release** workflow builds, runs the same gates as CI, attaches `mvs-vscode-*.vsix`, and opens a release with generated notes.
+- **GitHub Release:** push a tag `v` + exact `package.json` version (for example `v0.3.2`). The **Release** workflow builds, runs the same gates as CI, attaches `mvs-vscode-*.vsix`, and opens a release with generated notes. You can also run **Actions → Release → Run workflow** on a branch: it performs the full build and uploads a **vsix-release-dryrun** artifact without creating a GitHub Release (releases still only happen on tag pushes).
 - **VS Marketplace:** `npx @vscode/vsce publish` with a [Personal Access Token](https://code.visualstudio.com/api/working-with-extensions/publishing-extension).
 - **Open VSX:** `npx ovsx publish` with an [Open VSX token](https://github.com/eclipse/openvsx/wiki/Publishing-Extensions).
 
-CI installs the latest `mvs-manager` from MVSengine releases, runs `mvs:dogfood-check`, `mvs:lint`, then `check`, ESLint, tests, compile, and `vsce package`.
+CI uses **Node 24** (`actions/setup-node@v6`) and installs the latest `mvs-manager` from MVSengine releases, then runs `mvs:dogfood-check`, `mvs:lint`, `check`, ESLint, tests, compile, and `vsce package`.
 
 ## License
 

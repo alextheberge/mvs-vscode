@@ -34,7 +34,7 @@
       "vscode"
     ],
     "runtime_constraints": {
-      "node": "20+"
+      "node": "24+"
     }
   },
   "scan_policy": {

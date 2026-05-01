@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install mvs-manager (MVSengine releases)
         run: |
           set -euo pipefail
@@ -29,9 +29,9 @@ jobs:
           chmod +x "$bin_dir/mvs-manager"
           "$bin_dir/mvs-manager" --version
       - run: echo "${{ github.workspace }}/.local/bin" >> "$GITHUB_PATH"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
       - run: npm ci
       - run: npm run mvs:dogfood-check
@@ -41,7 +41,7 @@ jobs:
       - run: npm run compile
       - run: npm run mvs:lint
       - run: npm run package
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: vsix
           path: "*.vsix"
