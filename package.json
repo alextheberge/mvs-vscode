@@ -2,7 +2,7 @@
   "name": "mvs-vscode",
   "displayName": "MVS Manager",
   "description": "Multidimensional versioning for projects using mvs-manager (lint, generate, report, doctor).",
-  "version": "0.3.2",
+  "version": "1.3.2",
   "publisher": "alextheberge",
   "license": "AGPL-3.0-only",
   "repository": {
@@ -98,7 +98,10 @@
         "mvsManager.autoUpdate.mode": {
           "type": "string",
           "default": "install",
-          "enum": ["install", "notify"],
+          "enum": [
+            "install",
+            "notify"
+          ],
           "enumDescriptions": [
             "When a newer version exists, download the release .vsix and install it, then prompt to reload.",
             "Show a notification first; install only if you choose \"Download and install\"."

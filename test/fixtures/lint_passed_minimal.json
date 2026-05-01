@@ -1,0 +1,22 @@
+{
+  "command": "lint",
+  "status": "passed",
+  "exit_code": 0,
+  "manifest_path": "/tmp/mvs.json",
+  "root": "/tmp",
+  "failure_count": 0,
+  "failures": [],
+  "evidence": {
+    "feature_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "protocol_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "public_api_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "feature_inventory_count": 0,
+    "protocol_inventory_count": 0,
+    "public_api_inventory_count": 0,
+    "diff": {
+      "features": { "added": [], "removed": [] },
+      "protocols": { "added": [], "removed": [] },
+      "public_api": { "added": [], "removed": [] }
+    }
+  }
+}

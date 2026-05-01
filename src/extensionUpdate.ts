@@ -7,15 +7,12 @@ import {
   reportBackgroundFailure,
   reportCommandFailure,
 } from "./commandErrors";
+import type { GitHubReleaseAsset } from "./vsixAsset";
+import { pickVsixAsset } from "./vsixAsset";
 import { compareSemverNumeric, parseGithubRepoFromGitUrl, stripLeadingV } from "./versionUtils";
 
 const GH_ACCEPT = "application/vnd.github+json";
 const UA = "mvs-vscode-extension-update";
-
-interface GitHubReleaseAsset {
-  name: string;
-  browser_download_url: string;
-}
 
 interface GitHubReleaseLatest {
   tag_name: string;
@@ -36,27 +33,6 @@ function readAutoUpdateConfig() {
     intervalHours: Math.max(1, cfg.get<number>("autoUpdate.intervalHours", 24) ?? 24),
     releaseApiUrl: (cfg.get<string>("autoUpdate.releaseApiUrl", "") ?? "").trim(),
   };
-}
-
-function pickVsixAsset(assets: GitHubReleaseAsset[], packageName: string): GitHubReleaseAsset | undefined {
-  const vsix = assets.filter((a) => a.name.toLowerCase().endsWith(".vsix"));
-  if (vsix.length === 0) {
-    return undefined;
-  }
-  const universal = vsix.find((a) => /universal/i.test(a.name));
-  if (universal) {
-    return universal;
-  }
-  const prefix = new RegExp(`^${escapeRegExp(packageName)}-`, "i");
-  const primary = vsix.find((a) => prefix.test(a.name));
-  if (primary) {
-    return primary;
-  }
-  return vsix[0];
-}
-
-function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 async function fetchLatestReleaseJson(

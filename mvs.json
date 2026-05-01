@@ -1,19 +1,19 @@
 {
   "$schema": "https://mvs.dev/schema/v1",
   "identity": {
-    "mvs": "0.3.2-vscode",
-    "arch": 0,
+    "mvs": "1.3.2-vscode",
+    "arch": 1,
     "feat": 3,
     "prot": 2,
     "cont": "vscode"
   },
   "compatibility": {
     "host_range": {
-      "min_prot": 0,
+      "min_prot": 2,
       "max_prot": 2
     },
     "extension_range": {
-      "min_prot": 0,
+      "min_prot": 2,
       "max_prot": 2
     },
     "legacy_shims": []
@@ -95,6 +95,18 @@
         "Protocol incremented due to @mvs-protocol surface drift (example source: src/extension.ts)."
       ],
       "changed_at_unix": 1777600957
+    },
+    {
+      "mvs": "1.3.2-vscode",
+      "arch": 1,
+      "feat": 3,
+      "prot": 2,
+      "cont": "vscode",
+      "reasons": [
+        "Architecture incremented due to declared data/system break: VS Code extension public contract frozen for MVS 1.x line; first stable semver 1.0.0 release.",
+        "Range strategy `lock-step` applied (host/extension ranges pinned to PROT 2)."
+      ],
+      "changed_at_unix": 1777603319
     }
   ]
 }

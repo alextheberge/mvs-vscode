@@ -8,6 +8,7 @@ import {
   remediesForProcessSpawnError,
   reportCommandFailure,
 } from "./commandErrors";
+import { MIN_MVS_MANAGER_VERSION } from "./extensionMetadata";
 import { checkAndApplyExtensionUpdate, scheduleExtensionAutoUpdate } from "./extensionUpdate";
 import { diagnosticsFromLintReport } from "./lintDiagnostics";
 import { parseLintReportJson } from "./lintModel";
@@ -611,6 +612,9 @@ export function activate(context: vscode.ExtensionContext) {
   const extVer =
     (context.extension.packageJSON as { version?: string } | undefined)?.version ?? "?";
   log(`MVS extension activated (package ${extVer}).`);
+  log(
+    `Minimum tested mvs-manager (MVSengine): ${MIN_MVS_MANAGER_VERSION}+ — see README Requirements and Compatibility contract.`
+  );
   const wf0 = vscode.workspace.workspaceFolders?.[0];
   if (wf0) {
     void logWorkspaceMvsIdentityIfPresent(wf0);

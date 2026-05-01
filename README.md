@@ -6,8 +6,9 @@ Thin editor wrapper around the [`mvs-manager`](https://github.com/alextheberge/M
 
 - [`mvs-manager`](https://github.com/alextheberge/MVSengine) on your `PATH`, **or** set `mvsManager.executablePath` to the binary.
 - A workspace folder that contains `mvs.json` (or adjust `mvsManager.manifest`).
+- **Minimum tested CLI:** **1.10.0** or newer (see [`src/extensionMetadata.ts`](src/extensionMetadata.ts)). Match or exceed the version CI downloads from [MVSengine releases](https://github.com/alextheberge/MVSengine/releases). The integration contract is `lint --format json` (`LintReport` JSON; see [`src/lintModel.ts`](src/lintModel.ts)).
 
-Minimum tested CLI version: align with the [MVSengine](https://github.com/alextheberge/MVSengine) release you install; the integration contract is `lint --format json` (`LintReport` JSON).
+**Compatibility contract (1.x):** frozen command IDs, settings keys, and deprecation rules — [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
 
 ## Download from GitHub
 
@@ -16,7 +17,7 @@ Minimum tested CLI version: align with the [MVSengine](https://github.com/alexth
 | **Latest stable** universal VSIX (recommended) | [**github.com/alextheberge/mvs-vscode/releases/latest**](https://github.com/alextheberge/mvs-vscode/releases/latest) — open **Assets**, download `mvs-vscode-*-universal.vsix`, then **Extensions: Install from VSIX…** |
 | **Bleeding edge** from `main` (prerelease, updated on each push to `main`) | [**…/releases/tag/edge**](https://github.com/alextheberge/mvs-vscode/releases/tag/edge) — same install flow; may be ahead of the latest stable tag |
 
-Stable releases use semver tags (`v0.3.2`, …). The **edge** prerelease does not replace **Latest** on GitHub’s API, so the extension’s auto-update (which uses `releases/latest`) still tracks **stable** builds.
+Stable releases use semver tags (`v1.3.2`, …). The **edge** prerelease does not replace **Latest** on GitHub’s API, so the extension’s auto-update (which uses `releases/latest`) still tracks **stable** builds.
 
 ## Install
 
@@ -72,12 +73,14 @@ VSCodium uses [Open VSX](https://open-vsx.org/) by default. After the extension 
 
 This repository [dogfoods](https://github.com/alextheberge/MVSengine) MVS: `mvs.json` pins the extension’s public API (`activate` / `deactivate`), feature tags, and protocol tags. After you change tracked surfaces, run `mvs-manager generate` (or **MVS: Generate** in this workspace), then `npm run mvs:sync-version` so `package.json` matches `mvs.json` identity (`arch.feat.prot`). `npm run mvs:dogfood-check` verifies the two stay aligned.
 
-- **Stable GitHub Release:** push an annotated tag `v` + exact `package.json` version (for example `v0.3.2`). The **Release** workflow builds, attaches **`mvs-vscode-<version>-universal.vsix`**, and publishes the release (shown under **Releases** and at `/releases/latest`). **Actions → Release → Run workflow** on a branch only uploads **`vsix-release-dryrun-universal`** (no GitHub Release).
+- **Stable GitHub Release:** push an annotated tag `v` + exact `package.json` version (for example `v1.3.2`). The **Release** workflow builds, attaches **`mvs-vscode-<version>-universal.vsix`**, and publishes the release (shown under **Releases** and at `/releases/latest`). **Actions → Release → Run workflow** on a branch only uploads **`vsix-release-dryrun-universal`** (no GitHub Release). See [CHANGELOG.md](CHANGELOG.md) for release notes.
 - **Edge prerelease:** every push to **`main`** runs **Edge VSIX (main)** and republishes the **`edge`** prerelease so a VSIX is always on GitHub without tagging (see [Download from GitHub](#download-from-github)).
 - **VS Marketplace:** `npx @vscode/vsce publish` with a [Personal Access Token](https://code.visualstudio.com/api/working-with-extensions/publishing-extension).
 - **Open VSX:** `npx ovsx publish` with an [Open VSX token](https://github.com/eclipse/openvsx/wiki/Publishing-Extensions).
 
 CI uses **Node 24** (`actions/setup-node@v6`) and installs the latest `mvs-manager` from MVSengine releases, then runs `mvs:dogfood-check`, `mvs:lint`, `check`, ESLint, tests, compile, and `vsce package`.
+
+**Dependency / security:** [Dependabot](.github/dependabot.yml) proposes weekly npm updates. Before tagging a release, run **`npm audit`** and resolve **high** severity issues when feasible (see [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)).
 
 ## License
 
