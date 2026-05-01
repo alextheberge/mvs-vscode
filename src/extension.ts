@@ -13,8 +13,14 @@ import { checkAndApplyExtensionUpdate, scheduleExtensionAutoUpdate } from "./ext
 import { diagnosticsFromLintReport } from "./lintDiagnostics";
 import { parseLintReportJson } from "./lintModel";
 import { resolveExecutable, runMvsManager } from "./mvsRunner";
+import { MvsStatusBarController, readManifestIdentityState } from "./mvsStatusBar";
 
 const COLLECTION = vscode.languages.createDiagnosticCollection("mvs");
+let statusBarController: MvsStatusBarController | undefined;
+
+function bumpMvsStatusBar(): void {
+  void statusBarController?.refresh();
+}
 let output: vscode.OutputChannel;
 let saveLintTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -228,6 +234,98 @@ async function runLint(
   }
 }
 
+async function runInit(wf: vscode.WorkspaceFolder, opts?: { skipConfirm?: boolean }): Promise<void> {
+  const commandLabel = "MVS: Initialize manifest";
+  if (!opts?.skipConfirm) {
+    const pick = await vscode.window.showWarningMessage(
+      "Create mvs.json with `mvs-manager init` (project detection and defaults)? This fails if the manifest file already exists.",
+      { modal: true },
+      "Run init"
+    );
+    if (pick !== "Run init") {
+      return;
+    }
+  }
+  const c = readConfig(wf);
+  const exe = resolveExecutable(c.executablePath, wf.uri.fsPath);
+  const rootAbs = rootAbsPath(wf, c.root);
+  const manifestAbs = manifestAbsPath(wf, c.root, c.manifest);
+  const args = ["init", "--root", rootAbs, "--manifest", c.manifest, "--context", c.context, "--format", "text"];
+  log(`$ ${exe} ${args.map((a) => (/\s/.test(a) ? JSON.stringify(a) : a)).join(" ")}`);
+
+  let stdout: string;
+  let stderr: string;
+  let code: number | null;
+  try {
+    const result = await runMvsManager(exe, args, wf.uri.fsPath);
+    stdout = result.stdout;
+    stderr = result.stderr;
+    code = result.code;
+  } catch (e) {
+    reportCommandFailure(log, revealMvsOutput, {
+      command: commandLabel,
+      summary: `Could not start mvs-manager (${exe}) for init.`,
+      cause: e,
+      remedies: remediesForProcessSpawnError(exe, e),
+      extraLogLines: [`Resolved executable: ${exe}`, `cwd: ${wf.uri.fsPath}`],
+    });
+    return;
+  }
+
+  if (stdout.trim()) {
+    log(stdout.trim());
+  }
+  if (stderr.trim()) {
+    log(stderr.trim());
+  }
+
+  if (code === null) {
+    reportCommandFailure(log, revealMvsOutput, {
+      command: commandLabel,
+      summary: "MVS init exited without an exit code.",
+      cause: new Error("exit code was null"),
+      remedies: ["See stderr in the MVS output channel.", "Re-run `mvs-manager init` in a terminal."],
+      extraLogLines: [`stderr:\n${stderr.slice(0, 3000)}`],
+    });
+    return;
+  }
+
+  if (code !== 0) {
+    reportCommandFailure(log, revealMvsOutput, {
+      command: commandLabel,
+      summary: `MVS init failed with exit code ${code}.`,
+      cause: new Error(stderr.trim() || stdout.trim() || `Process exited with code ${code}`),
+      remedies: [
+        "If the manifest already exists, use **MVS: Generate / update manifest** or delete the file first.",
+        "Confirm **MVS Manager: Root** and **Manifest** match where you want mvs.json.",
+        "Run the same command in a terminal for full output.",
+      ],
+      extraLogLines: [
+        `manifest path: ${manifestAbs}`,
+        `root: ${rootAbs}`,
+        ...(stderr.trim() ? [`stderr:\n${stderr.slice(0, 4000)}`] : []),
+        ...(stdout.trim() ? [`stdout:\n${stdout.slice(0, 4000)}`] : []),
+      ],
+    });
+    return;
+  }
+
+  void vscode.window.showInformationMessage("MVS init completed — manifest created.");
+  bumpMvsStatusBar();
+  try {
+    const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(manifestAbs));
+    await vscode.window.showTextDocument(doc, { preview: false, preserveFocus: false });
+  } catch (e) {
+    reportCommandFailure(log, revealMvsOutput, {
+      command: commandLabel,
+      summary: "Init succeeded but the manifest could not be opened in the editor.",
+      cause: e,
+      remedies: ["Open the manifest path from Explorer.", "Run **MVS: Lint manifest** when ready."],
+      extraLogLines: [`path: ${manifestAbs}`],
+    });
+  }
+}
+
 async function runGenerate(wf: vscode.WorkspaceFolder): Promise<void> {
   const commandLabel = "MVS: Generate / update manifest";
   const pick = await vscode.window.showWarningMessage(
@@ -317,6 +415,7 @@ async function runGenerate(wf: vscode.WorkspaceFolder): Promise<void> {
   }
 
   void vscode.window.showInformationMessage("MVS generate completed.");
+  bumpMvsStatusBar();
   try {
     await runLint(wf, undefined, { commandLabel: `${commandLabel} (post-generate lint)` });
   } catch (e) {
@@ -430,6 +529,99 @@ async function runReport(wf: vscode.WorkspaceFolder): Promise<void> {
   }
 }
 
+type StatusBarQuickAction = "open" | "lint" | "generate" | "doctor" | "output";
+
+interface StatusBarQuickPickItem extends vscode.QuickPickItem {
+  action: StatusBarQuickAction;
+}
+
+async function handleStatusBarClick(): Promise<void> {
+  const wf = getWorkspaceFolder();
+  if (!wf) {
+    void vscode.window.showInformationMessage("MVS: open a folder workspace first.");
+    return;
+  }
+  const c = readConfig(wf);
+  const state = await readManifestIdentityState(wf, c.root, c.manifest);
+
+  if (state.kind === "missing") {
+    const choice = await vscode.window.showInformationMessage(
+      "No MVS manifest yet at the configured path. Add multidimensional versioning to this repo?",
+      {
+        modal: false,
+        detail:
+          "Runs **mvs-manager init** (starter manifest from project detection). If the path is wrong, adjust **MVS Manager: Root** and **Manifest** in Settings.",
+      },
+      "Initialize manifest",
+      "Open MVS settings"
+    );
+    if (choice === "Initialize manifest") {
+      await runInit(wf, { skipConfirm: true });
+    } else if (choice === "Open MVS settings") {
+      await vscode.commands.executeCommand("workbench.action.openSettings", "mvsManager");
+    }
+    return;
+  }
+
+  if (state.kind === "invalid") {
+    const choice = await vscode.window.showWarningMessage(
+      `MVS manifest is not valid JSON: ${state.reason}`,
+      { modal: false, detail: state.manifestAbs },
+      "Open manifest",
+      "Open MVS output"
+    );
+    if (choice === "Open manifest") {
+      const doc = await vscode.workspace.openTextDocument(state.manifestUri);
+      await vscode.window.showTextDocument(doc);
+    } else if (choice === "Open MVS output") {
+      revealMvsOutput();
+    }
+    return;
+  }
+
+  if (state.kind !== "ok") {
+    return;
+  }
+
+  const items: StatusBarQuickPickItem[] = [
+    { label: "$(file) Open manifest", description: state.manifestAbs, action: "open" },
+    { label: "$(check) Lint manifest", description: "mvs-manager lint --format json", action: "lint" },
+    {
+      label: "$(sync) Generate / update manifest",
+      description: "mvs-manager generate",
+      action: "generate",
+    },
+    { label: "$(debug) Doctor", description: "mvs-manager doctor", action: "doctor" },
+    { label: "$(output) Open MVS output", action: "output" },
+  ];
+  const sel = await vscode.window.showQuickPick(items, {
+    title: `MVS — ${state.identity}`,
+    placeHolder: "Choose an action",
+  });
+  if (!sel) {
+    return;
+  }
+  switch (sel.action) {
+    case "open": {
+      const doc = await vscode.workspace.openTextDocument(state.manifestUri);
+      await vscode.window.showTextDocument(doc);
+      break;
+    }
+    case "lint":
+      await vscode.commands.executeCommand("mvs.lint");
+      break;
+    case "generate":
+      await vscode.commands.executeCommand("mvs.generate");
+      break;
+    case "doctor":
+      await vscode.commands.executeCommand("mvs.doctor");
+      break;
+    case "output":
+      revealMvsOutput();
+      break;
+  }
+}
+
 async function runDoctor(wf: vscode.WorkspaceFolder): Promise<void> {
   const commandLabel = "MVS: Doctor";
   const c = readConfig(wf);
@@ -504,6 +696,9 @@ export function activate(context: vscode.ExtensionContext) {
   output = vscode.window.createOutputChannel("MVS");
   context.subscriptions.push(output, COLLECTION);
 
+  statusBarController = new MvsStatusBarController(getWorkspaceFolder, readConfig);
+  context.subscriptions.push(statusBarController);
+
   const withFolder = async (command: string, fn: (wf: vscode.WorkspaceFolder) => Promise<void>): Promise<void> => {
     const wf = getWorkspaceFolder();
     if (!wf) {
@@ -562,6 +757,21 @@ export function activate(context: vscode.ExtensionContext) {
         });
       }
     }),
+    vscode.commands.registerCommand("mvs.statusBarClick", async () => {
+      try {
+        await handleStatusBarClick();
+      } catch (e) {
+        reportCommandFailure(log, revealMvsOutput, {
+          command: "MVS: Status bar",
+          summary: "Status bar action failed unexpectedly.",
+          cause: e,
+          remedies: ["See the MVS output channel.", "Reload the window and retry."],
+        });
+      }
+    }),
+    vscode.commands.registerCommand("mvs.initWorkspace", () =>
+      withFolder("MVS: Initialize manifest", (wf) => runInit(wf))
+    ),
     vscode.commands.registerCommand("mvs.checkForUpdates", async () => {
       try {
         await vscode.window.withProgress(

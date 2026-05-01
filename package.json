@@ -29,7 +29,9 @@
     "onCommand:mvs.report",
     "onCommand:mvs.doctor",
     "onCommand:mvs.clearDiagnostics",
-    "onCommand:mvs.checkForUpdates"
+    "onCommand:mvs.checkForUpdates",
+    "onCommand:mvs.statusBarClick",
+    "onCommand:mvs.initWorkspace"
   ],
   "main": "./dist/extension.js",
   "scripts": {
@@ -149,6 +151,16 @@
       {
         "command": "mvs.checkForUpdates",
         "title": "MVS: Check for extension updates",
+        "category": "MVS"
+      },
+      {
+        "command": "mvs.statusBarClick",
+        "title": "MVS: Status bar actions",
+        "category": "MVS"
+      },
+      {
+        "command": "mvs.initWorkspace",
+        "title": "MVS: Initialize manifest (init)",
         "category": "MVS"
       }
     ]
